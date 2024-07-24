@@ -3,13 +3,17 @@ Splits files into parts and merges them back
 
 ```
 FileSplitter splits files into parts and merges them back.
-Usage:
+Usage: FileSplitter -split -f <file path> [-d <parts directory>] [-b <parts size>] [-mode <split mode>]
+Usage: FileSplitter -merge [-f <file path>] [-d <parts directory>]
+Options:
   -b uint
-        Size of the parts in bytes. Default is 25MB (default 25000000)
+        Size of the parts in bytes. Default is 25MB. (default 25000000)
   -d string
-        Destination directory, where to save the splitted files. Default is 'splitted' (default "splitted")
+        Destination directory, where to save the splitted files. (default "splitted")
   -f string
-        Required. The source file to split.
+        Required for splitting. The source file to split or the destination file to merge.
+  -m string
+        Split mode. Allowed values: binary, newline. (default "binary")
   -merge
         Merge the splitted files back to the original file
   -split
