@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 type FileSplitter struct {
@@ -117,6 +118,72 @@ func (fs *FileSplitter) Split() (uint, error) {
 			partFile.Close()
 		}
 	}
+
+	err = WriteFileSplitInfo(FileSplitInfo{
+		PartCount: partCount,
+		FilePath:  fs.FilePath,
+	}, filepath.Join(fs.PartsDirPath, fmt.Sprintf("%s%s%s", "splitted_", "info", ".json")))
+	if err != nil {
+		return partCount, err
+	}
+
+	return partCount, nil
+}
+
+func (fs *FileSplitter) SplitNewLines() (uint, error) {
+	var partCount uint = 0
+	if err := fs.CheckRequiredFields(); err != nil {
+		return 0, err
+	}
+	// open the source file
+	sourceFile, err := os.Open(fs.FilePath)
+	if err != nil {
+		return 0, fmt.Errorf("ERROR: Could not open source file '" + fs.FilePath + "'")
+	}
+	defer sourceFile.Close()
+
+	var bytesWrittenToFile uint = 0
+	scanner := bufio.NewScanner(sourceFile)
+	//scanner.Split(bufio.ScanRunes)
+
+	partCount = 1
+	var partFilePath string = filepath.Join(fs.PartsDirPath, fmt.Sprintf("%s%d%s", "splitted_", partCount, ".bin"))
+	partFile, err := os.Create(partFilePath)
+	if err != nil {
+		return 0, fmt.Errorf("ERROR: Could not create part file '" + partFilePath + "'")
+	}
+
+	newline := "\n"
+	if runtime.GOOS == "windows" {
+		newline = "\r\n"
+	}
+
+	for scanner.Scan() {
+		b := []byte(scanner.Text() + newline)
+		bytesRead := len(b)
+
+		if (bytesWrittenToFile != 0) && (bytesWrittenToFile+uint(bytesRead) > fs.PartsSize) {
+			partCount++
+			bytesWrittenToFile = 0
+			// create new part file
+			partFile.Close()
+			partFilePath = filepath.Join(fs.PartsDirPath, fmt.Sprintf("%s%d%s", "splitted_", partCount, ".bin"))
+			partFile, err = os.Create(partFilePath)
+			if err != nil {
+				return partCount, fmt.Errorf("ERROR: Could not create part file '" + partFilePath + "'")
+			}
+		}
+		// writing to the part file
+		bytesWritten, err := partFile.Write(b)
+		if err != nil {
+			return partCount, fmt.Errorf("ERROR: Could not write to part file '" + partFilePath + "'")
+		}
+		if bytesWritten != bytesRead {
+			return partCount, fmt.Errorf("ERROR: Could not write the whole part to the part file '" + partFilePath + "'")
+		}
+		bytesWrittenToFile += uint(bytesWritten)
+	}
+	partFile.Close()
 
 	err = WriteFileSplitInfo(FileSplitInfo{
 		PartCount: partCount,
