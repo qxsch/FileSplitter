@@ -4,13 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/qxsch/FileSplitter/shared"
 )
 
 func main() {
 	var (
-		partsSize    = flag.Uint("b", 25000000, "Size of the parts in bytes. Default is 25MB")
-		partsDirPath = flag.String("d", "splitted", "Destination directory, where to save the splitted files. Default is 'splitted'")
-		filenPath    = flag.String("f", "", "Required. The source file to split.")
+		partsSize    = flag.Uint("b", 25000000, "Size of the parts in bytes. Default is 25MB.")
+		partsDirPath = flag.String("d", "splitted", "Destination directory, where to save the splitted files.")
+		filenPath    = flag.String("f", "", "Required for splitting. The source file to split or the destination file to merge.")
 		merge        = flag.Bool("merge", false, "Merge the splitted files back to the original file")
 		split        = flag.Bool("split", false, "Split the file into parts")
 	)
@@ -54,7 +56,7 @@ func main() {
 		if *filenPath != "" {
 			fmt.Println("Source file path:", *filenPath)
 		}
-		fm, _ := NewFileMerger(*partsDirPath, *filenPath)
+		fm, _ := shared.NewFileMerger(*partsDirPath, *filenPath)
 		fm.WriteToStdOut = true
 		fm.Merge()
 	} else {
@@ -64,7 +66,7 @@ func main() {
 		fmt.Println("Parts dir path:", *partsDirPath)
 		fmt.Println("Source file path:", *filenPath)
 
-		fs, _ := NewFileSplitter(*partsSize, *partsDirPath, *filenPath)
+		fs, _ := shared.NewFileSplitter(*partsSize, *partsDirPath, *filenPath)
 		if fs == nil {
 			fmt.Println("ERROR: Could not create file splitter")
 		} else {
