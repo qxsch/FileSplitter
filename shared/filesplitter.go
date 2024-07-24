@@ -2,7 +2,6 @@ package shared
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -92,11 +91,11 @@ func (fs *FileSplitter) Split() (uint, error) {
 	reader := bufio.NewReader(sourceFile)
 	buffer := make([]byte, fs.PartsSize)
 	for {
-		partCount++
 		bytesRead, err := reader.Read(buffer)
 		if err != nil {
 			break
 		}
+		partCount++
 		if bytesRead > 0 {
 			// create the part file
 			var partFilePath string = filepath.Join(fs.PartsDirPath, fmt.Sprintf("%s%d%s", "splitted_", partCount, ".bin"))
@@ -119,22 +118,12 @@ func (fs *FileSplitter) Split() (uint, error) {
 		}
 	}
 
-	// create the file split info
-	infoFile, err := os.Create(filepath.Join(fs.PartsDirPath, fmt.Sprintf("%s%s%s", "splitted_", "info", ".json")))
-	if err != nil {
-		return partCount, fmt.Errorf("ERROR: Could not create the split info file. " + err.Error())
-	}
-	defer infoFile.Close()
-	jsonData, err := json.Marshal(&FileSplitInfo{
+	err = WriteFileSplitInfo(FileSplitInfo{
 		PartCount: partCount,
 		FilePath:  fs.FilePath,
-	})
+	}, filepath.Join(fs.PartsDirPath, fmt.Sprintf("%s%s%s", "splitted_", "info", ".json")))
 	if err != nil {
-		return partCount, fmt.Errorf("ERROR: Could not create the split information. " + err.Error())
-	}
-	_, err = infoFile.Write(jsonData)
-	if err != nil {
-		return partCount, fmt.Errorf("ERROR: Could not write the split information. " + err.Error())
+		return partCount, err
 	}
 
 	return partCount, nil

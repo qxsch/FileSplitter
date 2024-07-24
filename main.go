@@ -58,7 +58,13 @@ func main() {
 		}
 		fm, _ := shared.NewFileMerger(*partsDirPath, *filenPath)
 		fm.WriteToStdOut = true
-		fm.Merge()
+		fileName, restoredPartNum, err := fm.Merge()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(2)
+		} else {
+			fmt.Println("File merged successfully into ", fileName, " from ", restoredPartNum, " parts")
+		}
 	} else {
 		fmt.Println("Splitting the file into parts")
 		// print the values
@@ -84,5 +90,4 @@ func main() {
 			fmt.Println("File splitted successfully into ", partCount, " parts")
 		}
 	}
-
 }

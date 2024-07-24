@@ -2,7 +2,6 @@ package shared
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -53,22 +52,18 @@ func (fm *FileMerger) CheckRequiredFields() error {
 	}
 
 	// read the info file
-	infoFile, err := os.Open(infoFilePath)
+	fm.fileInfo, err = ReadFileSplitInfo(infoFilePath)
 	if err != nil {
-		return fmt.Errorf("ERROR: Could not open info file '" + infoFilePath + "'")
+		return err
 	}
-	defer infoFile.Close()
-	jsonParser := json.NewDecoder(infoFile)
-	if err = jsonParser.Decode(&fm.fileInfo); err != nil {
-		return fmt.Errorf("ERROR: Could not parse the info file '" + infoFilePath + "'")
-	}
-
 	fm.hasSplitInfo = true
 
 	return nil
 }
 
-func (fm *FileMerger) Merge() (string, error) {
+func (fm *FileMerger) Merge() (string, uint, error) {
+	var restoredPartNum uint = 0
+
 	err := fm.CheckRequiredFields()
 	if err != nil {
 		if fm.WriteToStdOut {
@@ -79,13 +74,13 @@ func (fm *FileMerger) Merge() (string, error) {
 		fm.FilePath = fm.fileInfo.FilePath
 	}
 	if fm.FilePath == "" {
-		return "", fmt.Errorf("ERROR: File path is required")
+		return "", restoredPartNum, fmt.Errorf("ERROR: File path is required")
 	}
 
 	// open the destination file
 	destFile, err := os.Create(fm.FilePath)
 	if err != nil {
-		return "", fmt.Errorf("ERROR: Could not create destination file '" + fm.FilePath + "'")
+		return "", restoredPartNum, fmt.Errorf("ERROR: Could not create destination file '" + fm.FilePath + "'")
 	}
 	defer destFile.Close()
 
@@ -99,18 +94,19 @@ func (fm *FileMerger) Merge() (string, error) {
 			silentlyFailOnOpenError = true
 			maxPartCount = ^uint(0)
 		} else {
-			return fm.FilePath, nil
+			return fm.FilePath, restoredPartNum, nil
 		}
 	}
 
-	for i := uint(1); i <= maxPartCount; i++ {
-		partFilePath := filepath.Join(fm.PartsDirPath, fmt.Sprintf("%s%d%s", "splitted_", i, ".bin"))
+	for restoredPartNum = uint(1); restoredPartNum <= maxPartCount; restoredPartNum++ {
+		partFilePath := filepath.Join(fm.PartsDirPath, fmt.Sprintf("%s%d%s", "splitted_", restoredPartNum, ".bin"))
 		partFile, err := os.Open(partFilePath)
 		if err != nil {
 			if silentlyFailOnOpenError {
+				restoredPartNum--
 				break
 			} else {
-				return fm.FilePath, fmt.Errorf("ERROR: Could not open part file '" + partFilePath + "'")
+				return fm.FilePath, restoredPartNum, fmt.Errorf("ERROR: Could not open part file '" + partFilePath + "'")
 			}
 		}
 		defer partFile.Close()
@@ -125,14 +121,13 @@ func (fm *FileMerger) Merge() (string, error) {
 			if bytesRead > 0 {
 				bytesWritten, err := destFile.Write(buffer[:bytesRead])
 				if err != nil {
-					return fm.FilePath, fmt.Errorf("ERROR: Could not write to destination file '" + fm.FilePath + "'")
+					return fm.FilePath, restoredPartNum, fmt.Errorf("ERROR: Could not write to destination file '" + fm.FilePath + "'")
 				}
 				if bytesWritten != bytesRead {
-					return fm.FilePath, fmt.Errorf("ERROR: Could not write the whole part to the destination file '" + fm.FilePath + "'")
+					return fm.FilePath, restoredPartNum, fmt.Errorf("ERROR: Could not write the whole part to the destination file '" + fm.FilePath + "'")
 				}
 			}
 		}
 	}
-
-	return fm.FilePath, nil
+	return fm.FilePath, restoredPartNum, nil
 }
