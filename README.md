@@ -19,13 +19,13 @@ Usage:
 ## How to install?
 ### Linux
 ```bash
-wget https://github.com/qxsch/FileSplitter/raw/main/filesplitter -O FileSplitter
-chmod +x FileSplitter
+wget https://github.com/qxsch/FileSplitter/raw/main/filesplitter -O fileSplitter
+chmod +x filesplitter
 ```
 ### Windows
 ```powershell
-Invoke-WebRequest -Uri "https://github.com/qxsch/FileSplitter/raw/main/filesplitter.exe" -OutFile "FileSplitter.exe"
-Unblock-File -Path ".\FileSplitter.exe"
+Invoke-WebRequest -Uri "https://github.com/qxsch/FileSplitter/raw/main/filesplitter.exe" -OutFile "fileSplitter.exe"
+Unblock-File -Path ".\filesplitter.exe"
 ```
 
 
@@ -34,15 +34,15 @@ To split a file into parts, use the `-split` flag. The `-f` flag is required to 
 
 Example Linux:
 ```bash
-./FileSplitter -split -f /path/to/file.txt -d /path/to/parts
+./filesplitter -split -f /path/to/file.txt -d /path/to/parts
 # or simply
-./FileSplitter -f /path/to/file.txt
+./filesplitter -f /path/to/file.txt
 ```
 Example Windows:
 ```powershell
-.\FileSplitter.exe -split -f C:\path\to\file.txt -d C:\path\to\parts
+.\filesplitter.exe -split -f C:\path\to\file.txt -d C:\path\to\parts
 # or simply
-.\FileSplitter.exe -f C:\path\to\file.txt
+.\filesplitter.exe -f C:\path\to\file.txt
 ```
 
 ## Merging the splitted files
@@ -50,15 +50,15 @@ To merge the splitted files back to the original file, use the `-merge` flag. Th
 
 Example Linux:
 ```bash
-./FileSplitter -merge -f /path/to/file.txt -d /path/to/parts
+./filesplitter -merge -f /path/to/file.txt -d /path/to/parts
 # or simply
-./FileSplitter -merge
+./filesplitter -merge
 ```
 Example Windows:
 ```powershell
-.\FileSplitter.exe -merge -f C:\path\to\file.txt -d C:\path\to\parts
+.\filesplitter.exe -merge -f C:\path\to\file.txt -d C:\path\to\parts
 # or simply
-.\FileSplitter.exe -merge
+.\filesplitter.exe -merge
 ```
 
 ## How to build?
