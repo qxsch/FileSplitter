@@ -16,6 +16,19 @@ Usage:
         Split the file into parts
 ```
 
+## How to install?
+### Linux
+```bash
+wget https://github.com/qxsch/FileSplitter/raw/main/filesplitter -O FileSplitter
+chmod +x FileSplitter
+```
+### Windows
+```powershell
+Invoke-WebRequest -Uri "https://github.com/qxsch/FileSplitter/raw/main/filesplitter.exe" -OutFile "FileSplitter.exe"
+Unblock-File -Path ".\FileSplitter.exe"
+```
+
+
 ## Splitting a file
 To split a file into parts, use the `-split` flag. The `-f` flag is required to specify the source file to split. The `-b` flag can be used to specify the size of the parts in bytes. The default size is 25MB.
 
@@ -46,4 +59,15 @@ Example Windows:
 .\FileSplitter.exe -merge -f C:\path\to\file.txt -d C:\path\to\parts
 # or simply
 .\FileSplitter.exe -merge
+```
+
+## How to build?
+
+### Linux
+```bash
+./build.sh
+```
+### Windows
+```powershell
+.\build.ps1
 ```
